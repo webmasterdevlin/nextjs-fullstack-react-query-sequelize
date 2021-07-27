@@ -1,0 +1,35 @@
+###
+GET https://jsonplaceholder.typicode.com/posts/
+Accept: application/json
+
+###
+GET http://localhost:3000/api/anti-heroes
+Accept: application/json
+
+###
+DELETE http://localhost:3000/api/anti-heroes/6457a746-8067-422b-bba7-c6ddb675706e
+Accept: application/json
+
+###
+POST http://localhost:3000/api/anti-heroes
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "knownAs": "JD",
+  "house": "Florida"
+}
+
+###
+PUT http://localhost:3000/api/anti-heroes/47b647c5-cd8e-45f0-a21b-6319efe9d4c1
+Content-Type: application/json
+
+{
+  "firstName": "John - Updated",
+  "lastName": "Doe - Updated",
+  "knownAs": "JD - Updated",
+  "house": "Florida - Updated"
+}
+

@@ -1,0 +1,35 @@
+###
+GET https://jsonplaceholder.typicode.com/posts/
+Accept: application/json
+
+###
+GET http://localhost:3000/api/heroes
+Accept: application/json
+
+###
+DELETE http://localhost:3000/api/heroes/802a3544-1368-429e-9a7e-72219c0601f7
+Accept: application/json
+
+###
+POST http://localhost:3000/api/heroes
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "knownAs": "JD",
+  "house": "Florida"
+}
+
+###
+PUT http://localhost:3000/api/heroes/7bf46b00-9f10-4399-9002-c40df6b9d9e4
+Content-Type: application/json
+
+{
+  "firstName": "John - Updated",
+  "lastName": "Doe - Updated",
+  "knownAs": "JD - Updated",
+  "house": "Florida - Updated"
+}
+
