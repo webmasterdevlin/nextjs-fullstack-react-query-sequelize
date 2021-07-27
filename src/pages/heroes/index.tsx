@@ -21,7 +21,7 @@ import { queryClient } from "src/pages/_app";
 import { GetServerSideProps, GetStaticProps } from "next";
 import { QueryClient } from "react-query";
 import { dehydrate } from "react-query/hydration";
-import { api, EndPoints } from "../../axios/api-config";
+import { api, EndPoints } from "src/axios/api-config";
 import stringify from "json-stringify-safe";
 
 const HeroesPage = () => {
