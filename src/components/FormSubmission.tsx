@@ -1,16 +1,13 @@
 import React from "react";
-import { useDispatch } from "react-redux";
 import { Formik } from "formik";
 import * as yup from "yup";
 import SharedForm from "src/components/SharedForm";
 
 type Props = {
-  handleCreateAction: (values: any) => void;
+  handleMutate: (values: any) => void;
 };
 
-const FormSubmission = ({ handleCreateAction }: Props) => {
-  const dispatch = useDispatch();
-
+const FormSubmission = ({ handleMutate }: Props) => {
   return (
     <Formik
       initialValues={{
@@ -26,7 +23,7 @@ const FormSubmission = ({ handleCreateAction }: Props) => {
         knownAs: yup.string().label("Known as").max(45).required(),
       })}
       onSubmit={(values, actions) => {
-        dispatch(handleCreateAction(values));
+        handleMutate(values);
         actions.resetForm();
       }}
     >

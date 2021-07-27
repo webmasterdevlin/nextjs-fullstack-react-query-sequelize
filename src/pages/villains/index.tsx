@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "src/store/reducers";
+import React, { useState } from "react";
+import { GetServerSideProps } from "next";
+import { QueryClient } from "react-query";
+import { dehydrate } from "react-query/hydration";
 import {
   Box,
   Button,
@@ -12,46 +13,48 @@ import { makeStyles } from "@material-ui/styles";
 
 import TitleBar from "src/components/TitleBar";
 import UpdateUiLabel from "src/components/UpdateUiLabel";
-import FormSubmission from "src/components/FormSubmission";
 import Layout from "src/components/Layout";
-
-import {
-  deleteVillainAction,
-  getVillainsAction,
-  postVillainAction,
-} from "src/features/villains/villainAsyncActions";
-import { softDeleteVillainAction } from "src/features/villains/villainSlice";
+import FormSubmission from "src/components/FormSubmission";
+import useFetchVillains from "src/features/villains/useFetchVillains";
+import useRemoveVillain from "src/features/villains/useRemoveVillain";
+import useAddVillain from "src/features/villains/useAddVillain";
+import { VillainModel } from "src/models/client/villainModel";
+import { queryClient } from "src/pages/_app";
+import { api, EndPoints } from "src/axios/api-config";
 
 const VillainsPage = () => {
-  const dispatch = useDispatch();
-  const { villains, loading } = useSelector(
-    (state: RootState) => state.villain
-  );
+  const { data: response, status } = useFetchVillains();
+  const { mutate: removeVillain } = useRemoveVillain();
+  const { mutate: addVillain } = useAddVillain();
+  /*local state*/
+  const [counter, setCounter] = useState("0");
 
   const classes = useStyles();
   const smallScreen = useMediaQuery("(max-width:600px)");
 
-  /*local state*/
-  const [counter, setCounter] = useState("0");
+  const handleSoftDelete = (id: string) => {
+    queryClient.setQueryData<{ data: VillainModel[] }>("villains", (input) => ({
+      data: input?.data?.filter((v) => v.id !== id) as any,
+    }));
+  };
 
-  useEffect(() => {
-    dispatch(getVillainsAction());
-  }, [dispatch]);
+  if (status === "error") return <p>Error :(</p>;
 
   return (
-    <Layout title={"Next Redux Toolkit + TypeOrm - Villains Page"}>
+    <Layout>
       <TitleBar title={"Super Villains Page"} />
-      <FormSubmission handleCreateAction={postVillainAction} />
+      <FormSubmission handleMutate={addVillain} />
       <UpdateUiLabel />
       <>
-        {loading ? (
+        {status === "loading" ? (
           <Typography data-testid={"loading"} variant={"h2"}>
             Loading.. Please wait..
           </Typography>
         ) : (
-          villains?.map((v) => (
+          response?.data?.map((v) => (
             <Box
-              key={v?.id}
+              key={v.id}
+              role={"card"}
               mb={2}
               display={"flex"}
               flexDirection={smallScreen ? "column" : "row"}
@@ -59,8 +62,8 @@ const VillainsPage = () => {
               data-testid={"card"}
             >
               <Typography>
-                <span>{`${v?.firstName} ${v?.lastName} is ${v?.knownAs}`}</span>
-                {counter === v?.id && <span> - marked</span>}
+                <span>{`${v.firstName} ${v.lastName} is ${v.knownAs}`}</span>
+                {counter === v.id && <span> - marked</span>}
               </Typography>
               <div>
                 <Button
@@ -74,20 +77,18 @@ const VillainsPage = () => {
                 </Button>{" "}
                 <Button
                   className={classes.button}
-                  onClick={() => dispatch(softDeleteVillainAction(v.id))}
                   variant={"contained"}
                   color={"secondary"}
+                  onClick={() => handleSoftDelete(v.id)}
                   data-testid={"remove-button"}
                 >
                   Remove
                 </Button>{" "}
                 <Button
                   className={classes.button}
-                  onClick={async () =>
-                    await dispatch(deleteVillainAction(v.id))
-                  }
                   variant={"outlined"}
                   color={"primary"}
+                  onClick={() => removeVillain(v.id)}
                   data-testid={"delete-button"}
                 >
                   DELETE in DB
@@ -97,19 +98,34 @@ const VillainsPage = () => {
           ))
         )}
       </>
-      {villains.length === 0 && !loading && (
+      {response?.data?.length === 0 && status !== "loading" && (
         <Button
           data-testid={"refetch-button"}
           className={classes.button}
           variant={"contained"}
           color={"primary"}
-          onClick={async () => await dispatch(getVillainsAction())}
+          onClick={() => queryClient.invalidateQueries("villains")}
         >
           Re-fetch
         </Button>
       )}
     </Layout>
   );
+};
+
+export const getStaticProps: GetServerSideProps = async () => {
+  const queryClient = new QueryClient();
+
+  await queryClient.prefetchQuery(
+    "villains",
+    async () => await api.get<VillainModel[]>(EndPoints.villains)
+  );
+
+  return {
+    props: {
+      dehydratedState: JSON.parse(JSON.stringify(dehydrate(queryClient))),
+    },
+  };
 };
 
 export default VillainsPage;

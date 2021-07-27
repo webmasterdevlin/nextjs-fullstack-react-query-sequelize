@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "src/store/reducers";
-
+import React, { useState } from "react";
+import { GetServerSideProps } from "next";
+import { QueryClient } from "react-query";
+import { dehydrate } from "react-query/hydration";
 import {
   Box,
   Button,
@@ -10,47 +10,54 @@ import {
   useMediaQuery,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import FormSubmission from "src/components/FormSubmission";
+
 import TitleBar from "src/components/TitleBar";
 import UpdateUiLabel from "src/components/UpdateUiLabel";
 import Layout from "src/components/Layout";
-import {
-  deleteAntiHeroAction,
-  getAntiHeroesAction,
-  postAntiHeroAction,
-} from "src/features/antiHeroes/antiHeroAsyncActions";
-import { softDeleteAntiHeroAction } from "src/features/antiHeroes/antiHeroSlice";
+import FormSubmission from "src/components/FormSubmission";
+import useFetchAntiHeroes from "src/features/anti-heroes/useFetchAntiHeroes";
+import useRemoveAntiHero from "src/features/anti-heroes/useRemoveAntiHero";
+import useAddAntiHero from "src/features/anti-heroes/useAddAntiHero";
+import { AntiHeroModel } from "src/models/client/antiHeroModel";
+import { queryClient } from "src/pages/_app";
+import { api, EndPoints } from "src/axios/api-config";
 
 const AntiHeroesPage = () => {
-  const dispatch = useDispatch();
-  const { loading, antiHeroes } = useSelector(
-    (state: RootState) => state.antiHero
-  );
+  const { data: response, status } = useFetchAntiHeroes();
+  const { mutate: removeAntiHero } = useRemoveAntiHero();
+  const { mutate: addAntiHero } = useAddAntiHero();
+  /*local state*/
+  const [counter, setCounter] = useState("0");
 
   const smallScreen = useMediaQuery("(max-width:600px)");
   const classes = useStyles();
 
-  /*local state*/
-  const [counter, setCounter] = useState("0");
+  const handleSoftDelete = (id: string) => {
+    queryClient.setQueryData<{ data: AntiHeroModel[] }>(
+      "antiHeroes",
+      (input) => ({
+        data: input?.data?.filter((ah) => ah.id !== id) as any,
+      })
+    );
+  };
 
-  useEffect(() => {
-    dispatch(getAntiHeroesAction());
-  }, [dispatch]);
+  if (status === "error") return <p>Error :(</p>;
 
   return (
-    <Layout title={"Next Redux Toolkit + TypeOrm - Anti Heroes Page"}>
-      <TitleBar title={"Anti-Heroes Page"} />
-      <FormSubmission handleCreateAction={postAntiHeroAction} />
+    <Layout>
+      <TitleBar title={"Anti Heroes Page"} />
+      <FormSubmission handleMutate={addAntiHero} />
       <UpdateUiLabel />
       <>
-        {loading ? (
+        {status === "loading" ? (
           <Typography data-testid="loading" variant={"h2"}>
             Loading.. Please wait..
           </Typography>
         ) : (
-          antiHeroes.map((ah) => (
+          response?.data?.map((ah) => (
             <Box
               mb={2}
+              role={"card"}
               key={ah.id}
               display={"flex"}
               flexDirection={smallScreen ? "column" : "row"}
@@ -75,20 +82,18 @@ const AntiHeroesPage = () => {
                 </Button>{" "}
                 <Button
                   className={classes.button}
-                  onClick={() => dispatch(softDeleteAntiHeroAction(ah.id))}
                   variant={"contained"}
                   color={"secondary"}
+                  onClick={() => handleSoftDelete(ah.id)}
                   data-testid={"remove-button"}
                 >
                   Remove
                 </Button>{" "}
                 <Button
                   className={classes.button}
-                  onClick={async () =>
-                    await dispatch(deleteAntiHeroAction(ah.id))
-                  }
                   variant={"outlined"}
                   color={"primary"}
+                  onClick={() => removeAntiHero(ah.id)}
                   data-testid={"delete-button"}
                 >
                   DELETE in DB
@@ -98,19 +103,35 @@ const AntiHeroesPage = () => {
           ))
         )}
       </>
-      {antiHeroes.length === 0 && !loading && (
+      {response?.data?.length === 0 && status !== "loading" && (
         <Button
           data-testid={"refetch-button"}
           className={classes.button}
           variant={"contained"}
           color={"primary"}
-          onClick={async () => await dispatch(getAntiHeroesAction())}
+          onClick={() => queryClient.invalidateQueries("antiHeroes")}
         >
           Re-fetch
         </Button>
       )}
     </Layout>
   );
+};
+
+export const getStaticProps: GetServerSideProps = async () => {
+  const queryClient = new QueryClient();
+
+  await queryClient.prefetchQuery("antiHeroes", () =>
+    api.get<AntiHeroModel[]>(EndPoints.antiHeroes)
+  );
+
+  const initialState = JSON.parse(JSON.stringify(dehydrate(queryClient)));
+
+  return {
+    props: {
+      dehydratedState: initialState ? initialState : null,
+    },
+  };
 };
 
 export default AntiHeroesPage;

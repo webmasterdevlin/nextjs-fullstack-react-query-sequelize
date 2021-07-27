@@ -1,5 +1,5 @@
 export type VillainModel = {
-  _id: string;
+  id: string;
   firstName: string;
   lastName: string;
   house: string;

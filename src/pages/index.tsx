@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <Layout title="Home | Next.js Redux Toolkit + TypeORM Example">
       <Typography variant={"h2"}>
-        Welcome to Fullstack Next.js with Redux Toolkit and TypeORM
+        Welcome to Fullstack Next.js with React Query and Sequelize
       </Typography>
     </Layout>
   );

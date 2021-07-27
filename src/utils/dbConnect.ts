@@ -1,16 +1,9 @@
 import { Sequelize } from "sequelize";
-
 import getConfig from "next/config";
 
-const postgres = getConfig();
-/*
-*     port: "5432",
-    host: "localhost",
-    name: "mydb",
-    user: "postgres",
-    pass: "pass",
-    * */
-const db = new Sequelize("mydb", "postgres", "pass", {
+const { name, user, pass } = getConfig().publicRuntimeConfig.postgres;
+
+const db = new Sequelize(name, user, pass, {
   host: "localhost",
   dialect: "postgres",
   pool: {

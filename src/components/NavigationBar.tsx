@@ -1,13 +1,18 @@
 import React from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "src/store/reducers";
+
 import { AppBar, Box, createStyles, Link, Toolbar } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
+import useFetchHeroes from "src/features/heroes/useFetchHeroes";
+import useFetchAntiHeroes from "src/features/anti-heroes/useFetchAntiHeroes";
+import useFetchVillains from "src/features/villains/useFetchVillains";
 
 import TotalOfCharacters from "./TotalOfCharacters";
 
 const NavigationBar = () => {
-  const store = useSelector((state: RootState) => state);
+  const { data: antiHeroes } = useFetchAntiHeroes();
+  const { data: heroes } = useFetchHeroes();
+  const { data: villains } = useFetchVillains();
+
   const classes = useStyles();
 
   return (
@@ -28,7 +33,7 @@ const NavigationBar = () => {
             Anti Heroes
           </Link>
           <TotalOfCharacters
-            collection={store.antiHero.antiHeroes}
+            collection={antiHeroes?.data}
             dataTestId={"total-anti-heroes"}
           />
         </Box>
@@ -42,7 +47,7 @@ const NavigationBar = () => {
             Heroes
           </Link>
           <TotalOfCharacters
-            collection={store.hero.heroes}
+            collection={heroes?.data}
             dataTestId={"total-heroes"}
           />
         </Box>
@@ -56,7 +61,7 @@ const NavigationBar = () => {
             Villains
           </Link>
           <TotalOfCharacters
-            collection={store.villain.villains}
+            collection={villains?.data}
             dataTestId={"total-villains"}
           />
         </Box>

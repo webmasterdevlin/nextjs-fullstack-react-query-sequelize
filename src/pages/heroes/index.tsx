@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "src/store/reducers";
+import React, { useState } from "react";
+
 import {
   Box,
   Button,
@@ -13,41 +12,50 @@ import TitleBar from "src/components/TitleBar";
 import UpdateUiLabel from "src/components/UpdateUiLabel";
 import Layout from "src/components/Layout";
 import FormSubmission from "src/components/FormSubmission";
-import {
-  deleteHeroAction,
-  getHeroesAction,
-  postHeroAction,
-} from "src/features/heroes/heroAsyncActions";
-import { softDeleteHeroAction } from "src/features/heroes/heroSlice";
+
+import useFetchHeroes from "src/features/heroes/useFetchHeroes";
+import useRemoveHero from "src/features/heroes/useRemoveHero";
+import useAddHero from "src/features/heroes/useAddHero";
+import { HeroModel } from "src/models/client/heroModel";
+import { queryClient } from "src/pages/_app";
+import { GetServerSideProps } from "next";
+import { QueryClient } from "react-query";
+import { dehydrate } from "react-query/hydration";
+import { api, EndPoints } from "../../axios/api-config";
 
 const HeroesPage = () => {
-  const dispatch = useDispatch();
-  const { heroes, loading } = useSelector((state: RootState) => state.hero);
+  const { data: response, status } = useFetchHeroes();
+  const { mutate: removeHero } = useRemoveHero();
+  const { mutate: addHero } = useAddHero();
+  /*local state*/
+  const [counter, setCounter] = useState("0");
 
   const smallScreen = useMediaQuery("(max-width:600px)");
   const classes = useStyles();
 
-  /*local state*/
-  const [counter, setCounter] = useState("0");
+  const handleSoftDelete = (id: string) => {
+    queryClient.setQueryData<{ data: HeroModel[] }>("heroes", (input) => ({
+      data: input?.data?.filter((h) => h.id !== id) as any,
+    }));
+  };
 
-  useEffect(() => {
-    dispatch(getHeroesAction());
-  }, [dispatch]);
+  if (status === "error") return <p>Error :(</p>;
 
   return (
-    <Layout title={"Next Redux Toolkit + TypeOrm - Heroes Page"}>
+    <Layout>
       <TitleBar title={"Super Heroes Page"} />
-      <FormSubmission handleCreateAction={postHeroAction} />
+      <FormSubmission handleMutate={addHero} />
       <UpdateUiLabel />
       <>
-        {loading ? (
+        {status === "loading" ? (
           <Typography data-testid={"loading"} variant={"h2"}>
             Loading.. Please wait..
           </Typography>
         ) : (
-          heroes.map((h) => (
+          response?.data?.map((h) => (
             <Box
               key={h.id}
+              role={"card"}
               mb={2}
               display={"flex"}
               flexDirection={smallScreen ? "column" : "row"}
@@ -70,18 +78,18 @@ const HeroesPage = () => {
                 </Button>{" "}
                 <Button
                   className={classes.button}
-                  onClick={() => dispatch(softDeleteHeroAction(h.id))}
                   variant={"contained"}
                   color={"secondary"}
+                  onClick={() => handleSoftDelete(h.id)}
                   data-testid={"remove-button"}
                 >
                   Remove
                 </Button>{" "}
                 <Button
                   className={classes.button}
-                  onClick={async () => await dispatch(deleteHeroAction(h.id))}
                   variant={"outlined"}
                   color={"primary"}
+                  onClick={() => removeHero(h.id)}
                   data-testid={"delete-button"}
                 >
                   DELETE in DB
@@ -91,19 +99,34 @@ const HeroesPage = () => {
           ))
         )}
       </>
-      {heroes.length === 0 && !loading && (
+      {response?.data?.length === 0 && status !== "loading" && (
         <Button
           data-testid={"refetch-button"}
           className={classes.button}
           variant={"contained"}
           color={"primary"}
-          onClick={async () => await dispatch(getHeroesAction())}
+          onClick={() => queryClient.invalidateQueries("heroes")}
         >
           Re-fetch
         </Button>
       )}
     </Layout>
   );
+};
+
+export const getStaticProps: GetServerSideProps = async () => {
+  const queryClient = new QueryClient();
+
+  await queryClient.prefetchQuery(
+    "heroes",
+    async () => await api.get<HeroModel[]>(EndPoints.heroes)
+  );
+
+  return {
+    props: {
+      dehydratedState: dehydrate(queryClient),
+    },
+  };
 };
 
 export default HeroesPage;
