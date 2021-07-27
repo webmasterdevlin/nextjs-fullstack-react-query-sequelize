@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { GetServerSideProps } from "next";
+import { GetServerSideProps, GetStaticProps } from "next";
 import { QueryClient } from "react-query";
 import { dehydrate } from "react-query/hydration";
 import {
@@ -21,6 +21,7 @@ import useAddVillain from "src/features/villains/useAddVillain";
 import { VillainModel } from "src/models/client/villainModel";
 import { queryClient } from "src/pages/_app";
 import { api, EndPoints } from "src/axios/api-config";
+import stringify from "json-stringify-safe";
 
 const VillainsPage = () => {
   const { data: response, status } = useFetchVillains();
@@ -113,17 +114,16 @@ const VillainsPage = () => {
   );
 };
 
-export const getStaticProps: GetServerSideProps = async () => {
+export const getStaticProps: GetStaticProps = async () => {
   const queryClient = new QueryClient();
+  const getVillains = async () =>
+    await api.get<VillainModel[]>(EndPoints.villains);
 
-  await queryClient.prefetchQuery(
-    "villains",
-    async () => await api.get<VillainModel[]>(EndPoints.villains)
-  );
+  await queryClient.prefetchQuery("villains", getVillains);
 
   return {
     props: {
-      dehydratedState: JSON.parse(JSON.stringify(dehydrate(queryClient))),
+      dehydratedState: JSON.parse(stringify(dehydrate(queryClient))),
     },
   };
 };

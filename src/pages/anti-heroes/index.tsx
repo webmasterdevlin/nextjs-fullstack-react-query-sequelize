@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { GetServerSideProps } from "next";
+import { GetServerSideProps, GetStaticProps } from "next";
 import { QueryClient } from "react-query";
 import { dehydrate } from "react-query/hydration";
 import {
@@ -21,6 +21,7 @@ import useAddAntiHero from "src/features/anti-heroes/useAddAntiHero";
 import { AntiHeroModel } from "src/models/client/antiHeroModel";
 import { queryClient } from "src/pages/_app";
 import { api, EndPoints } from "src/axios/api-config";
+import stringify from "json-stringify-safe";
 
 const AntiHeroesPage = () => {
   const { data: response, status } = useFetchAntiHeroes();
@@ -118,18 +119,15 @@ const AntiHeroesPage = () => {
   );
 };
 
-export const getStaticProps: GetServerSideProps = async () => {
+export const getStaticProps: GetStaticProps = async () => {
   const queryClient = new QueryClient();
+  const getAntiHeroes = async () => await api.get<any>(EndPoints.antiHeroes);
 
-  await queryClient.prefetchQuery("antiHeroes", () =>
-    api.get<AntiHeroModel[]>(EndPoints.antiHeroes)
-  );
-
-  const initialState = JSON.parse(JSON.stringify(dehydrate(queryClient)));
+  await queryClient.prefetchQuery("antiHeroes", getAntiHeroes);
 
   return {
     props: {
-      dehydratedState: initialState ? initialState : null,
+      dehydratedState: JSON.parse(stringify(dehydrate(queryClient))),
     },
   };
 };

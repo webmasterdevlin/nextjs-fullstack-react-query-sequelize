@@ -18,10 +18,11 @@ import useRemoveHero from "src/features/heroes/useRemoveHero";
 import useAddHero from "src/features/heroes/useAddHero";
 import { HeroModel } from "src/models/client/heroModel";
 import { queryClient } from "src/pages/_app";
-import { GetServerSideProps } from "next";
+import { GetServerSideProps, GetStaticProps } from "next";
 import { QueryClient } from "react-query";
 import { dehydrate } from "react-query/hydration";
 import { api, EndPoints } from "../../axios/api-config";
+import stringify from "json-stringify-safe";
 
 const HeroesPage = () => {
   const { data: response, status } = useFetchHeroes();
@@ -114,17 +115,15 @@ const HeroesPage = () => {
   );
 };
 
-export const getStaticProps: GetServerSideProps = async () => {
+export const getStaticProps: GetStaticProps = async () => {
   const queryClient = new QueryClient();
+  const getHeroes = async () => await api.get<any>(EndPoints.heroes);
 
-  await queryClient.prefetchQuery(
-    "heroes",
-    async () => await api.get<HeroModel[]>(EndPoints.heroes)
-  );
+  await queryClient.prefetchQuery("heroes", getHeroes);
 
   return {
     props: {
-      dehydratedState: dehydrate(queryClient),
+      dehydratedState: JSON.parse(stringify(dehydrate(queryClient))),
     },
   };
 };
