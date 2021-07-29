@@ -27,6 +27,7 @@ PUT http://localhost:3000/api/anti-heroes/47b647c5-cd8e-45f0-a21b-6319efe9d4c1
 Content-Type: application/json
 
 {
+  "id": "47b647c5-cd8e-45f0-a21b-6319efe9d4c1",
   "firstName": "John - Updated",
   "lastName": "Doe - Updated",
   "knownAs": "JD - Updated",

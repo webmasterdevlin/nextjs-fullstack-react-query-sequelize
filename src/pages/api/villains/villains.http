@@ -27,6 +27,7 @@ PUT http://localhost:3000/api/villains/058cf4cf-cdb7-4b7f-acc9-ad0f2f9869f6
 Content-Type: application/json
 
 {
+  "id": "47b647c5-cd8e-45f0-a21b-6319efe9d4c1",
   "firstName": "John - Updated",
   "lastName": "Doe - Updated",
   "knownAs": "JD - Updated",
