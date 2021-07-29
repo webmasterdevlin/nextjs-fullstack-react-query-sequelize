@@ -2,7 +2,7 @@ import { Sequelize } from "sequelize";
 import getConfig from "next/config";
 
 const {
-  publicRuntimeConfig: { postgres },
+  serverRuntimeConfig: { postgres },
 } = getConfig();
 
 const db = new Sequelize(postgres.name, postgres.user, postgres.pass, {
