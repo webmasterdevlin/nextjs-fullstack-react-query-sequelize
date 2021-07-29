@@ -1,4 +1,3 @@
-import boom from "@hapi/boom";
 import { Model } from "sequelize";
 
 import VillainEntity from "src/models/api/villainEntity";
@@ -8,7 +7,7 @@ export const villainFind = async (): Promise<Model[]> => {
   try {
     return await VillainEntity.findAll();
   } catch (e) {
-    throw boom.boomify(e);
+    throw e;
   }
 };
 
@@ -18,7 +17,7 @@ export const villainFindByIdAndRemove = async (id: string): Promise<void> => {
       where: { id },
     });
   } catch (e) {
-    throw boom.boomify(e);
+    throw e;
   }
 };
 
@@ -28,8 +27,7 @@ export const villainSave = async (body: VillainModel): Promise<Model> => {
       ...body,
     });
   } catch (e) {
-    console.log(e);
-    throw boom.boomify(e);
+    throw e;
   }
 };
 
@@ -40,7 +38,7 @@ export const villainFindByIdAndUpdate = async (
   try {
     await VillainEntity.update(body, { where: { id } });
   } catch (e) {
-    boom.boomify(e);
+    throw e;
   }
 };
 
@@ -48,6 +46,6 @@ export const villainFindById = async (id: string): Promise<Model> => {
   try {
     return await VillainEntity.findByPk(id);
   } catch (e) {
-    boom.boomify(e);
+    throw e;
   }
 };
