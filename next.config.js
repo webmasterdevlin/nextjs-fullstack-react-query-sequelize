@@ -3,11 +3,11 @@ module.exports = {
   serverRuntimeConfig: {
     // Will only be available on the server side
     postgres: {
-      port: process.env.PORT,
-      host: process.env.HOST,
-      name: process.env.NAME,
-      user: process.env.USER,
-      pass: process.env.PASS,
+      port: process.env.POSTGRES_PORT,
+      host: process.env.POSTGRES_HOST,
+      name: process.env.POSTGRES_NAME,
+      user: process.env.POSTGRES_USER,
+      pass: process.env.POSTGRES_PASS,
     },
   },
   publicRuntimeConfig: {
