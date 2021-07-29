@@ -1,7 +1,7 @@
 import { Sequelize } from "sequelize";
 import getConfig from "next/config";
 
-const { name, user, pass } = getConfig().publicRuntimeConfig.postgres;
+const { name, user, pass } = getConfig().serverRuntimeConfig.postgres;
 
 const db = new Sequelize(name, user, pass, {
   host: "localhost",
